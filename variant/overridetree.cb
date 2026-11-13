@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# ThinkPad T560 (20FJ) — Skylake-U / Sunrise Point-LP, 15", без dGPU, без TB3.
+#
+# PCIe (з lspci на стоковій прошивці):
+#   RP1 (00:1c.0) -> 01:00.0 Realtek RTS522A card reader
+#   RP3 (00:1c.2) -> 02:00.0 M.2 WLAN (MT7921)
+#   GBE (00:1f.6) I219-LM
+#   SATA (00:17.0) 2.5"
+#
+# CLKREQ: точна розводка CLKREQ# на T560 невідома, а неправильний номер дає
+# втрату референсного такту при вході в L1 (симптом: «D3cold, device inaccessible»,
+# mt7921 «Timeout for driver own»). Тому CLKREQ вимкнено — такт тримається постійно.
+#
+# USB: PCH віддає 12 портів USB2 і 6 USB3 (як і вендорський ACPI: HSP0..HSPB,
+# SSP0..SSP5). OC-піни на платі розведені (GPP_E9/E10/E11 = USB2_OC0#/1#/2#),
+# але відповідність «порт -> OC» у вендорському ACPI не описана, тому для всіх
+# портів OC_SKIP: безпечніше не мати хибних overcurrent-подій, ніж вгадати неправильно.
+
+chip soc/intel/skylake
+	device domain 0 on
+		device ref south_xhci on
+			register "usb2_ports" = "{
+				[0]  = USB2_PORT_MID(OC_SKIP),
+				[1]  = USB2_PORT_MID(OC_SKIP),
+				[2]  = USB2_PORT_MID(OC_SKIP),
+				[3]  = USB2_PORT_MID(OC_SKIP),
+				[4]  = USB2_PORT_MID(OC_SKIP),
+				[5]  = USB2_PORT_MID(OC_SKIP),
+				[6]  = USB2_PORT_MID(OC_SKIP),
+				[7]  = USB2_PORT_MID(OC_SKIP),
+				[8]  = USB2_PORT_MID(OC_SKIP),
+				[9]  = USB2_PORT_MID(OC_SKIP),
+				[10] = USB2_PORT_MID(OC_SKIP),
+				[11] = USB2_PORT_MID(OC_SKIP),
+			}"
+			register "usb3_ports" = "{
+				[0] = USB3_PORT_DEFAULT(OC_SKIP),
+				[1] = USB3_PORT_DEFAULT(OC_SKIP),
+				[2] = USB3_PORT_DEFAULT(OC_SKIP),
+				[3] = USB3_PORT_DEFAULT(OC_SKIP),
+				[4] = USB3_PORT_DEFAULT(OC_SKIP),
+				[5] = USB3_PORT_DEFAULT(OC_SKIP),
+			}"
+		end
+
+		device ref sata on
+			register "SataPortsEnable[0]" = "1"
+			register "SataPortsEnable[1]" = "1"
+		end
+
+		# Ethernet (I219-LM)
+		device ref gbe on
+			register "LanClkReqSupported"	= "false"
+			register "EnableLanLtr"		= "true"
+			register "EnableLanK1Off"	= "true"
+		end
+
+		# Card reader RTS522A - x1
+		# AER вимкнено: на стоковій прошивці при ініціалізації лінку сипле
+		# ~10 correctable RxErr, далі тихо. Лінк при цьому стабільний (2.5 GT/s).
+		device ref pcie_rp1 on
+			register "PcieRpClkReqSupport[0]"		= "false"
+			register "PcieRpAdvancedErrorReporting[0]"	= "false"
+			register "PcieRpLtrEnable[0]"			= "false"
+			smbios_slot_desc "SlotTypeOther" "SlotLengthOther" "SD Card Reader" "SlotDataBusWidth1X"
+		end
+
+		# M.2 WLAN - x1
+		device ref pcie_rp3 on
+			register "PcieRpClkReqSupport[2]"		= "false"
+			register "PcieRpAdvancedErrorReporting[2]"	= "true"
+			register "PcieRpLtrEnable[2]"			= "false"
+			smbios_slot_desc "SlotTypeM2Socket1_DP" "SlotLengthOther" "M.2/A 2230" "SlotDataBusWidth1X"
+		end
+	end
+end

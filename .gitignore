@@ -1,0 +1,29 @@
+# firmware images and vendor blobs must never be committed
+*.rom
+*.ROM
+*.bin
+*.BIN
+*.exe
+*.fd
+binaries/
+build/
+
+# ME / IFD / GBE dumps, chip dumps
+dump*.bin
+*dump.bin
+me_*.bin
+ifd*.bin
+gbe*.bin
+spd*.bin
+
+# local tools / build products
+tools/
+*.o
+*.a
+__pycache__/
+
+# editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
