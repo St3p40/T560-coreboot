@@ -12,7 +12,6 @@ Tested on: **20FJS2RU00**, i5-6300U, 2×8 GB DDR3L-1600, FHD panel.
 | Boot (coreboot → EDK2 → Linux/Windows) | ✅ works |
 | Memory (2× DDR3L SO-DIMM, SPD over SMBus) | ✅ 16 GB trained |
 | Graphics (libgfxinit, eDP 1920×1080) | ✅ |
-| Bootsplash (custom logo) | ✅ |
 | UEFI variables (SMMSTORE) | ✅ |
 | SATA (2.5", AHCI) | ✅ |
 | USB (12 × USB2, 6 × USB3) | ✅ |
@@ -88,13 +87,18 @@ make -j$(nproc)
 
 `build/coreboot.rom` is a full 16 MiB image (IFD + GBE + ME + BIOS).
 
-### Bootsplash
+### Bootsplash (optional)
 
-`CONFIG_BOOTSPLASH` expects a JPEG that cbfstool post-processes with ImageMagick
-(`convert`), and the image must be ≤ the framebuffer size with width/height
-multiples of 16. `variant/bootsplash.jpg` is already 1920×1072, baseline 4:2:0 —
-either install ImageMagick, or drop the `:jpg420` suffix from
-`bootsplash.jpg-file` in `Makefile.mk` and use the file as-is.
+No splash is shipped in this repository. If you want one, set
+`CONFIG_BOOTSPLASH_IMAGE=y`, `CONFIG_BOOTSPLASH_FILE="<path to your.jpg>"` and
+`CONFIG_BOOTSPLASH=y` (plus `CONFIG_GENERIC_LINEAR_FRAMEBUFFER=y`, which
+`CONFIG_BOOTSPLASH` depends on).
+
+Constraints: JPEG, image ≤ framebuffer size, width/height multiples of 16.
+Upstream coreboot converts the file with ImageMagick (`:jpg420` suffix in
+`Makefile.mk`); if you pre-convert to baseline 4:2:0 yourself you can drop that
+suffix. Example that worked on this machine: 1920×1072, black background,
+~100 KiB.
 
 ## Flashing
 
